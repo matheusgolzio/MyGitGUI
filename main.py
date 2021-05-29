@@ -3,15 +3,106 @@ from tkinter import filedialog
 from tkinter import messagebox
 import os
 
-
 main_window = Tk()
 
 
 class System():
+    def verificationRepo(self):
+        self.is_started = open("config/is_started.txt", "r")
+        self.content = self.is_started.readlines()
+        for self.line in self.content:
+            if self.line == f"Diretorio: {self.path} | Inicado: Sim":
+                self.gitadd["state"] = NORMAL
+                self.gitcommit["state"] = NORMAL
+                self.gitstatus["state"] = NORMAL
+                self.gitlog["state"] = NORMAL
+                self.addremote["state"] = NORMAL
+                self.is_started.close()
+            
+            else:
+                self.gitinit["state"] = NORMAL
+                self.is_started.close()
+
+
     def startRepo(self):
-        os.system(f"cd {self.path}")
-        os.system("git init")
-        messagebox.showinfo(title="Started", message="The local repository was successfully created!")
+        try:
+            os.system(f"cd {self.path} && git init")
+        except:
+            messagebox.showerror(title="Error", message="Não pude inciar repositório local")
+        else:
+            messagebox.showinfo(title="Inciado", message="Repositório local inciado!")
+            self.is_started = open("config/is_started.txt", "w")
+            self.is_started.write(f"Diretório: {self.path} | Inicado: Sim")
+            self.is_started.close()
+
+        self.gitadd["state"] = NORMAL
+        self.gitcommit["state"] = NORMAL
+        self.gitstatus["state"] = NORMAL
+        self.gitlog["state"] = NORMAL
+        self.addremote["state"] = NORMAL
+    
+    
+    def showStatus(self):
+        os.system(f"cd {self.path} && git status")
+    
+
+    def gitAdd(self):
+        os.system(f"cd {self.path} && git add .")
+        messagebox.showinfo(title="Adicionado", message="Todas as alterações foram adicionadas!")
+    
+
+    def gitCommit(self):
+        self.commit_window = Toplevel()
+        self.commit_window.title("Commit")
+        self.commit_window.geometry("300x200")
+
+        # Widgets
+        self.message_c_label = Label(self.commit_window, text="Mensagem", font=("Verdana", 20))
+        self.message_c_label.pack(side=TOP)
+
+        
+        self.message_commit = Entry(self.commit_window, relief=FLAT)
+        self.message_commit.pack(side=TOP, ipadx=80, ipady=20)
+
+        self.commit_ok = Button(self.commit_window, text="Ok", relief=FLAT, bg="#F05030", fg="white", command=self.commit)
+        self.commit_ok.pack(side=LEFT, padx=50)
+
+        self.commit_cancel = Button(self.commit_window, text="Cancelar", relief=FLAT, bg="#F05030", fg="white", command=lambda :self.commit_window.destroy())
+        self.commit_cancel.pack(side=RIGHT, padx=40)
+    
+    def commit(self):
+        os.system(f'cd {self.path} && git commit -m "{self.message_commit.get()}"')
+        messagebox.showinfo(title="Commit Realizado", message="Todas as alterações foram commitadas, você poderá ver todas depois!")
+        self.commit_window.destroy()
+    
+
+    def gitLog(self):
+        os.system(f"cd {self.path} && git log")
+    
+
+    def infoRemote(self):
+        self.remote_window = Toplevel()
+        self.remote_window.title("Adicionar Repositório Remoto")
+        self.remote_window.geometry("300x200")
+
+        # Widgets
+        self.url_r_label = Label(self.remote_window, text="URL", font=("Verdana", 20))
+        self.url_r_label.pack(side=TOP)
+
+        
+        self.url_remote = Entry(self.remote_window, relief=FLAT)
+        self.url_remote.pack(side=TOP, ipadx=80, ipady=20)
+
+        self.remote_ok = Button(self.remote_window, text="Ok", relief=FLAT, bg="#F05030", fg="white", command=self.addRemote)
+        self.remote_ok.pack(side=LEFT, padx=50)
+
+        self.remote_cancel = Button(self.remote_window, text="Cancelar", relief=FLAT, bg="#F05030", fg="white", command=lambda :self.remote_window.destroy())
+        self.remote_cancel.pack(side=RIGHT, padx=40)
+    
+
+    def addRemote(self):
+        os.system(f"cd {self.path} && git remote add origin {self.url_remote.get()}.git")
+        messagebox.showinfo(title="Adicionado", message="Repositório local adicionado com sucesso!")
 
 
 class Application(System):
@@ -24,7 +115,7 @@ class Application(System):
     def ask_dir(self):
         self.path = filedialog.askdirectory()
         self.dir["text"] = self.path
-        self.gitinit["state"] = NORMAL
+        self.verificationRepo()
 
     
     # Main window
@@ -39,30 +130,36 @@ class Application(System):
         self.title = Label(self.main_window, text="GIT GUI", fg="#3F2C00", bg="#d3d3d3", font=("Verdana", 26))
         self.title.place(relx=0.35, rely=0.06)
 
-        self.add_dir = Button(self.main_window, text="Add Directory", relief=FLAT, bg="#F05030", bd=2, fg="white", command=self.ask_dir)
-        self.add_dir.place(relx=0.41, rely=0.3)
+        self.add_dir = Button(self.main_window, text="Adicionar diretório", relief=FLAT, bg="#F05030", bd=2, fg="white", command=self.ask_dir)
+        self.add_dir.place(relx=0.39, rely=0.3)
 
-        self.dir = Label(self.main_window, text="No path selected", bg="#d3d3d3", font=("Verdana", 15), fg="#3F2C00")
+        self.dir = Label(self.main_window, text="Diretório não selecionado", bg="#d3d3d3", font=("Verdana", 15), fg="#3F2C00")
         self.dir.pack(side=TOP, pady=120)
 
         # Repository Control
-        self.gitinit = Button(self.main_window, text="Start Local Repository", bg="#F05030", relief=FLAT, fg="white", state=DISABLED, command=self.startRepo)
+        self.gitinit = Button(self.main_window, text="Inciar diretório", bg="#F05030", relief=FLAT, fg="white", state=DISABLED, command=self.startRepo)
         self.gitinit.place(relx=0.1, rely=0.55)
 
-        self.addremote = Button(self.main_window, text="Add Remote Repository", bg="#F05030", relief=FLAT, fg="white", state=DISABLED)
-        self.addremote.place(relx=0.37, rely=0.55)
+        self.addremote = Button(self.main_window, text="Adicionar diretório remoto", bg="#F05030", relief=FLAT, fg="white", state=DISABLED)
+        self.addremote.place(relx=0.3, rely=0.55)
 
-        self.gitadd = Button(self.main_window, text="Git Add Changes", bg="#F05030", relief=FLAT, fg="white",state=DISABLED)
-        self.gitadd.place(relx=0.66, rely=0.55)
+        self.gitadd = Button(self.main_window, text="Adicionar alterações", bg="#F05030", relief=FLAT, fg="white",state=DISABLED, command=self.gitAdd)
+        self.gitadd.place(relx=0.63, rely=0.55)
 
-        self.gitlog = Button(self.main_window, text="See all commits", bg="#F05030", relief=FLAT, state=DISABLED)
-        self.gitlog.place(relx=0.1, rely=0.68)
+        self.gitcommit = Button(self.main_window, text="Commitar mudanças", bg="#F05030", relief=FLAT, fg="white",state=DISABLED, command=self.gitCommit)
+        self.gitcommit.place(relx=0.1, rely=0.68)
 
-        self.gitpull = Button(self.main_window, text="Pull files", bg="#F05030", relief=FLAT, fg="white",state=DISABLED)
-        self.gitpull.place(relx=0.3, rely=0.68)
+        self.gitlog = Button(self.main_window, text="Ver todos os commits", bg="#F05030", relief=FLAT, state=DISABLED, fg="white", command=self.gitLog)
+        self.gitlog.place(relx=0.37, rely=0.68)
 
-        self.gitpush = Button(self.main_window, text="Push files", bg="#F05030", relief=FLAT, fg="white",state=DISABLED)
-        self.gitpush.place(relx=0.43, rely=0.68)
+        self.gitpull = Button(self.main_window, text="Puxar arquivos", bg="#F05030", relief=FLAT, fg="white",state=DISABLED)
+        self.gitpull.place(relx=0.65, rely=0.68)
+
+        self.gitpush = Button(self.main_window, text="Enviar arquivos", bg="#F05030", relief=FLAT, fg="white",state=DISABLED)
+        self.gitpush.place(relx=0.1, rely=0.8)
+
+        self.gitstatus = Button(self.main_window, text="Status", bg="#F05030", relief=FLAT, fg="white",state=DISABLED, command=self.showStatus)
+        self.gitstatus.place(relx=0.3, rely=0.8)
 
 
 Application()
