@@ -22,6 +22,19 @@ class System():
             else:
                 self.gitinit["state"] = NORMAL
                 self.is_started.close()
+    
+
+    def verificationRemote(self):
+        self.is_radded = open("config/is_radded.txt", "r")
+        self.content_radded = self.is_radded.readlines()
+        for self.line_radded in self.content_radded:
+            if self.line_radded == f"Repositorio local: {self.path} | Repo remoto adicionado: Sim":
+                self.gitpull["state"] = NORMAL
+                self.gitpush["state"] = NORMAL
+                self.is_radded.close()
+
+            else:
+                self.is_radded.close()
 
 
     def startRepo(self):
@@ -102,7 +115,58 @@ class System():
 
     def addRemote(self):
         os.system(f"cd {self.path} && git remote add origin {self.url_remote.get()}.git")
+        self.is_radded = open("config/is_radded.txt", "w")
+        self.is_radded.write(f"Repositorio local: {self.path} | Repo remoto adicionado: Sim")
+        self.is_radded.close()
         messagebox.showinfo(title="Adicionado", message="Repositório local adicionado com sucesso!")
+    
+
+    def gitPushWin(self):
+        self.push_window = Toplevel()
+        self.push_window.title("Enviar arquivos")
+        self.push_window.geometry("300x200")
+
+        # Widgets
+        self.branch_r_label = Label(self.push_window, text="Branch", font=("Verdana", 20))
+        self.branch_r_label.pack(side=TOP)
+
+        self.branch_remote = Entry(self.push_window, relief=FLAT)
+        self.branch_remote.pack(side=TOP, ipadx=80, ipady=20)
+
+        self.push_ok = Button(self.push_window, text="Ok", relief=FLAT,bg="#F05030", fg="white", command=self.addRemote)
+        self.push_ok.pack(side=LEFT, padx=50)
+
+        self.push_cancel = Button(self.push_window, text="Cancelar", relief=FLAT,bg="#F05030", fg="white", command=lambda: self.push_window.destroy())
+        self.push_cancel.pack(side=RIGHT, padx=40)
+    
+
+    def gitPush(self):
+        os.system(f"cd {self.path} && git push -u origin {self.branch_remote.get()}")
+        messagebox.showinfo(title="Arquivos Enviados", message="Os arquivos foram enviados para o repositório com sucesso!")
+    
+
+    def gitPullWin(self):
+        self.pull_window = Toplevel()
+        self.pull_window.title("Coletar Arquivos")
+        self.pull_window.geometry("300x200")
+
+        # Widgets
+        self.branch_p_label = Label(self.pull_window, text="Branch", font=("Verdana", 20))
+        self.branch_p_label.pack(side=TOP)
+
+        self.branch_pull = Entry(self.pull_window, relief=FLAT)
+        self.branch_pull.pack(side=TOP, ipadx=80, ipady=20)
+
+        self.pull_ok = Button(self.pull_window, text="Ok", relief=FLAT,bg="#F05030", fg="white", command=self.gitPull)
+        self.pull_ok.pack(side=LEFT, padx=50)
+
+        self.pull_cancel = Button(self.pull_window, text="Cancelar", relief=FLAT,bg="#F05030", fg="white", command=lambda: self.pull_window.destroy())
+        self.pull_cancel.pack(side=RIGHT, padx=40)
+    
+
+    def gitPull(self):
+        os.system(f"cd {self.path} && git pull origin {self.branch_pull.get()}")
+        messagebox.showinfo(title="Arquivos Coletados", message="Os arquivos foram coletados do repositório com sucesso!")
 
 
 class Application(System):
@@ -116,6 +180,7 @@ class Application(System):
         self.path = filedialog.askdirectory()
         self.dir["text"] = self.path
         self.verificationRepo()
+        self.verificationRemote()
 
     
     # Main window
